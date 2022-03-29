@@ -73,13 +73,13 @@ pub enum Pixel {
     BGR555BE,
     BGR555LE,
 
-    #[cfg(feature = "ff_api_vaapi")]
+    #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
     VAAPI_MOCO,
-    #[cfg(feature = "ff_api_vaapi")]
+    #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
     VAAPI_IDCT,
-    #[cfg(feature = "ff_api_vaapi")]
+    #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
     VAAPI_VLD,
-    #[cfg(not(feature = "ff_api_vaapi"))]
+    #[cfg(any(not(feature = "ff_api_vaapi"), feature = "ffmpeg_5_0"))]
     VAAPI,
 
     YUV420P16LE,
@@ -341,6 +341,33 @@ pub enum Pixel {
     Y210BE,
     #[cfg(feature = "ffmpeg_4_3")]
     Y210LE,
+
+    #[cfg(feature = "ffmpeg_4_4")]
+    X2RGB10LE,
+    #[cfg(feature = "ffmpeg_4_4")]
+    X2RGB10BE,
+
+    #[cfg(feature = "ffmpeg_5_0")]
+    X2BGR10LE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    X2BGR10BE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P210BE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P210LE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P410BE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P410LE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P216BE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P216LE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P416BE,
+    #[cfg(feature = "ffmpeg_5_0")]
+    P416LE,
+
     #[cfg(feature = "rpi")]
     RPI,
     #[cfg(feature = "rpi")]
@@ -472,12 +499,14 @@ impl From<AVPixelFormat> for Pixel {
             AV_PIX_FMT_BGR555BE => Pixel::BGR555BE,
             AV_PIX_FMT_BGR555LE => Pixel::BGR555LE,
 
-            #[cfg(feature = "ff_api_vaapi")]
+            #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
             AV_PIX_FMT_VAAPI_MOCO => Pixel::VAAPI_MOCO,
-            #[cfg(feature = "ff_api_vaapi")]
+            #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
             AV_PIX_FMT_VAAPI_IDCT => Pixel::VAAPI_IDCT,
-            #[cfg(feature = "ff_api_vaapi")]
+            #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
             AV_PIX_FMT_VAAPI_VLD => Pixel::VAAPI_VLD,
+            #[cfg(any(not(feature = "ff_api_vaapi"), feature = "ffmpeg_5_0"))]
+            AV_PIX_FMT_VAAPI => Pixel::VAAPI,
 
             AV_PIX_FMT_YUV420P16LE => Pixel::YUV420P16LE,
             AV_PIX_FMT_YUV420P16BE => Pixel::YUV420P16BE,
@@ -675,6 +704,32 @@ impl From<AVPixelFormat> for Pixel {
             #[cfg(feature = "ffmpeg_4_3")]
             AV_PIX_FMT_Y210LE => Pixel::Y210LE,
 
+            #[cfg(feature = "ffmpeg_4_4")]
+            AV_PIX_FMT_X2RGB10LE => Pixel::X2RGB10LE,
+            #[cfg(feature = "ffmpeg_4_4")]
+            AV_PIX_FMT_X2RGB10BE => Pixel::X2RGB10BE,
+
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_X2BGR10LE => Pixel::X2BGR10LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_X2BGR10BE => Pixel::X2BGR10BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P210BE => Pixel::P210BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P210LE => Pixel::P210LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P410BE => Pixel::P410BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P410LE => Pixel::P410LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P216BE => Pixel::P216BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P216LE => Pixel::P216LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P416BE => Pixel::P416BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            AV_PIX_FMT_P416LE => Pixel::P416LE,
+
             #[cfg(feature = "rpi")]
             AV_PIX_FMT_RPI => Pixel::RPI,
             #[cfg(feature = "rpi")]
@@ -691,10 +746,10 @@ impl From<AVPixelFormat> for Pixel {
     }
 }
 
-impl Into<AVPixelFormat> for Pixel {
+impl From<Pixel> for AVPixelFormat {
     #[inline]
-    fn into(self) -> AVPixelFormat {
-        match self {
+    fn from(value: Pixel) -> AVPixelFormat {
+        match value {
             Pixel::None => AV_PIX_FMT_NONE,
 
             Pixel::YUV420P => AV_PIX_FMT_YUV420P,
@@ -760,11 +815,11 @@ impl Into<AVPixelFormat> for Pixel {
             Pixel::BGR555BE => AV_PIX_FMT_BGR555BE,
             Pixel::BGR555LE => AV_PIX_FMT_BGR555LE,
 
-            #[cfg(feature = "ff_api_vaapi")]
+            #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
             Pixel::VAAPI_MOCO => AV_PIX_FMT_VAAPI_MOCO,
-            #[cfg(feature = "ff_api_vaapi")]
+            #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
             Pixel::VAAPI_IDCT => AV_PIX_FMT_VAAPI_IDCT,
-            #[cfg(feature = "ff_api_vaapi")]
+            #[cfg(all(feature = "ff_api_vaapi", not(feature = "ffmpeg_5_0")))]
             Pixel::VAAPI_VLD => AV_PIX_FMT_VAAPI_VLD,
             #[cfg(not(feature = "ff_api_vaapi"))]
             Pixel::VAAPI => AV_PIX_FMT_VAAPI,
@@ -1028,6 +1083,32 @@ impl Into<AVPixelFormat> for Pixel {
             Pixel::Y210BE => AV_PIX_FMT_Y210BE,
             #[cfg(feature = "ffmpeg_4_3")]
             Pixel::Y210LE => AV_PIX_FMT_Y210LE,
+
+            #[cfg(feature = "ffmpeg_4_4")]
+            Pixel::X2RGB10LE => AV_PIX_FMT_X2RGB10LE,
+            #[cfg(feature = "ffmpeg_4_4")]
+            Pixel::X2RGB10BE => AV_PIX_FMT_X2RGB10BE,
+
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::X2BGR10LE => AV_PIX_FMT_X2BGR10LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::X2BGR10BE => AV_PIX_FMT_X2BGR10BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P210BE => AV_PIX_FMT_P210BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P210LE => AV_PIX_FMT_P210LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P410BE => AV_PIX_FMT_P410BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P410LE => AV_PIX_FMT_P410LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P216BE => AV_PIX_FMT_P216BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P216LE => AV_PIX_FMT_P216LE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P416BE => AV_PIX_FMT_P416BE,
+            #[cfg(feature = "ffmpeg_5_0")]
+            Pixel::P416LE => AV_PIX_FMT_P416LE,
 
             #[cfg(feature = "rpi")]
             Pixel::RPI => AV_PIX_FMT_RPI,

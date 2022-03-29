@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::ptr;
 use std::rc::Rc;
 
@@ -11,13 +12,13 @@ use {Codec, Error};
 
 pub struct Context {
     ptr: *mut AVCodecContext,
-    owner: Option<Rc<dyn Drop>>,
+    owner: Option<Rc<dyn Any>>,
 }
 
 unsafe impl Send for Context {}
 
 impl Context {
-    pub unsafe fn wrap(ptr: *mut AVCodecContext, owner: Option<Rc<dyn Drop>>) -> Self {
+    pub unsafe fn wrap(ptr: *mut AVCodecContext, owner: Option<Rc<dyn Any>>) -> Self {
         Context { ptr, owner }
     }
 
@@ -36,6 +37,18 @@ impl Context {
             Context {
                 ptr: avcodec_alloc_context3(ptr::null()),
                 owner: None,
+            }
+        }
+    }
+
+    pub fn from_parameters<P: Into<Parameters>>(parameters: P) -> Result<Self, Error> {
+        let parameters = parameters.into();
+        let mut context = Self::new();
+
+        unsafe {
+            match avcodec_parameters_to_context(context.as_mut_ptr(), parameters.as_ptr()) {
+                e if e < 0 => Err(Error::from(e)),
+                _ => Ok(context),
             }
         }
     }
@@ -130,6 +143,7 @@ impl Drop for Context {
     }
 }
 
+#[cfg(not(feature = "ffmpeg_5_0"))]
 impl Clone for Context {
     fn clone(&self) -> Self {
         let mut ctx = Context::new();
@@ -140,6 +154,7 @@ impl Clone for Context {
 
     fn clone_from(&mut self, source: &Self) {
         unsafe {
+            // Removed in ffmpeg >= 5.0.
             avcodec_copy_context(self.as_mut_ptr(), source.as_ptr());
         }
     }
